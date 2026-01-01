@@ -2,7 +2,7 @@
 
 import { supabase } from "@/libs/supabase";
 import { auth } from "@clerk/nextjs/server";
-import { use } from "react";
+import { sendTelegram } from "@/libs/telegram";
 
 export async function addProduct(formData: FormData) {
     
@@ -40,7 +40,12 @@ export async function fetchProduts() {
     }
 }
 
-export async function createOrder(productId: string, price: number, quantity: number) {
+export async function createOrder(
+    productId: string, 
+    price: number, 
+    quantity: number, 
+    productName?: string
+) {
     const { userId } = await auth();
     if (!userId) return;
 
@@ -49,7 +54,7 @@ export async function createOrder(productId: string, price: number, quantity: nu
             .from("orders")
             .insert({
                 user_id: userId,
-                total_amount: price,
+                total_amount: price * quantity,
             })
             .select()
             .single();
@@ -65,13 +70,17 @@ export async function createOrder(productId: string, price: number, quantity: nu
                 order_id: order?.id,
                 product_id: productId,
                 quantity: quantity,
-                price,
+                price: price * quantity,
             });
         
         if (orderItemError) {
             console.log("order items insert failed!: ", orderItemError);
             return;
         }
+
+        await sendTelegram(
+            `New order!\nProduct Name: ${productName}\nProduct ID: ${productId}\nQuantity: ${quantity}\nTotal price: ${price*quantity}`
+        )
         
         console.log("order created successfully!");
     } catch (e) {

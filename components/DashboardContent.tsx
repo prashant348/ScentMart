@@ -75,7 +75,8 @@ export default function DashboardContent({ products }: { products: Product[] }) 
                                             console.log("plz select quantity to order");
                                             return;
                                         }
-                                        createOrder(product.id, product.price, counts[product.id]);
+                                        const quantity = counts[product.id]
+                                        createOrder(product.id, product.price, quantity, product.name);
                                     }}
                                     className="cursor-pointer"
                                 >
