@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { sendTelegram } from "@/libs/telegram";
 
 export async function addProduct(formData: FormData) {
-    
+
     const { userId } = await auth();
     if (!userId) return;
 
@@ -17,7 +17,7 @@ export async function addProduct(formData: FormData) {
         await supabase
             .from("products")
             .insert({ name, price });
-        
+
         console.log("data inserted successfully!");
     } catch (e) {
         console.error("error in addProduct: ", e);
@@ -41,9 +41,9 @@ export async function fetchProduts() {
 }
 
 export async function createOrder(
-    productId: string, 
-    price: number, 
-    quantity: number, 
+    productId: string,
+    price: number,
+    quantity: number,
     productName?: string
 ) {
     const { userId } = await auth();
@@ -58,7 +58,7 @@ export async function createOrder(
             })
             .select()
             .single();
-        
+
         if (orderError || !order) {
             console.log("orders insert failed!: ", orderError);
             return;
@@ -72,18 +72,38 @@ export async function createOrder(
                 quantity: quantity,
                 price: price * quantity,
             });
-        
+
         if (orderItemError) {
             console.log("order items insert failed!: ", orderItemError);
             return;
         }
 
         await sendTelegram(
-            `New order!\nProduct Name: ${productName}\nProduct ID: ${productId}\nQuantity: ${quantity}\nTotal price: ${price*quantity}`
+            `New order!\nProduct Name: ${productName}\nProduct ID: ${productId}\nQuantity: ${quantity}\nTotal price: ${price * quantity}`
         )
-        
+
         console.log("order created successfully!");
     } catch (e) {
         console.error("error in creating order: ", e)
+    }
+}
+
+export async function fetchOrders() {
+    const { userId } = await auth();
+    if (!userId) return;
+
+    try {
+        const { data: orders, error: ordersFetchingError } = await supabase
+            .from("orders")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+        
+        if (ordersFetchingError) throw new Error("Error in fetching orders")
+
+        console.log("orders fetched successfully!")
+        return orders
+    } catch (e) {
+        console.error("error in fetching orders: ", e)
     }
 }
