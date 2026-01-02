@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  web:
+    image: scent-mart:v2
+    container_name: scentmart-web
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    restart: unless-stopped
+
+
+# 🧠 Samajh lo:
+# service = ek container
+# image = jo tu already build kar chuka
+# container_name = random naam nahi aayega
+# env_file = secrets safe way
+# restart = crash ho toh auto start
