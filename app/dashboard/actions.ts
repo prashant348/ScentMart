@@ -3,6 +3,7 @@
 import { supabase } from "@/libs/supabase";
 import { auth } from "@clerk/nextjs/server";
 import { sendTelegram } from "@/libs/telegram";
+import { currentUser } from "@clerk/nextjs/server";
 
 export async function addProduct(formData: FormData) {
 
@@ -24,7 +25,7 @@ export async function addProduct(formData: FormData) {
     }
 }
 
-export async function fetchProduts() {
+export async function fetchProducts() {
     const { userId } = await auth();
     if (!userId) return;
 
@@ -48,6 +49,10 @@ export async function createOrder(
 ) {
     const { userId } = await auth();
     if (!userId) return;
+
+    const user = await currentUser();
+    const userEmail = user?.emailAddresses[0].emailAddress;
+    const userFullName = `${user?.firstName} ${user?.lastName}`;
 
     try {
         const { data: order, error: orderError } = await supabase
@@ -79,10 +84,11 @@ export async function createOrder(
         }
 
         await sendTelegram(
-            `New order!\nProduct Name: ${productName}\nProduct ID: ${productId}\nQuantity: ${quantity}\nTotal price: ${price * quantity}`
+            `New order from ${userFullName}!\nUser email: ${userEmail}\nProduct Name: ${productName}\nProduct ID: ${productId}\nQuantity: ${quantity}\nOne piece price: ${price}\nTotal price: ${price * quantity}`
         )
 
         console.log("order created successfully!");
+        return true;
     } catch (e) {
         console.error("error in creating order: ", e)
     }
@@ -93,13 +99,31 @@ export async function fetchOrders() {
     if (!userId) return;
 
     try {
+        // fetch orders with nested order_items and their products
         const { data: orders, error: ordersFetchingError } = await supabase
             .from("orders")
-            .select("*")
+            .select(`
+                id,
+                status,
+                total_amount,
+                created_at,
+                order_items (
+                    id,
+                    product_id,
+                    quantity,
+                    price,
+                    products (
+                        id,
+                        name,
+                        price,
+                        image_url
+                    )
+                )
+            `)
             .eq("user_id", userId)
-            .order("created_at", { ascending: false })
-        
-        if (ordersFetchingError) throw new Error("Error in fetching orders")
+            .order("created_at", { ascending: false });
+
+        if (ordersFetchingError) throw ordersFetchingError;
 
         console.log("orders fetched successfully!")
         return orders
@@ -107,3 +131,4 @@ export async function fetchOrders() {
         console.error("error in fetching orders: ", e)
     }
 }
+

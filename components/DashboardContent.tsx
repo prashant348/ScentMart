@@ -2,10 +2,10 @@
 
 // import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { addProduct } from "@/app/dashboard/actions";
-import { createOrder } from "@/app/dashboard/actions";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import DashboardNavbar from "./DashboardNavbar";
+import DashboardScentCollection from "./DashboardScentCollection";
 
 interface Product {
     id: string
@@ -32,17 +32,19 @@ export default function DashboardContent({ products }: { products: Product[] }) 
     }
     return (
         <div>
-            <div>
-                <h1>Welcome to Dashboard, {fullName}</h1>
+            <DashboardNavbar />
+            <div className="w-full bg-[#161616] h-10 flex items-center justify-center font-sans font-semibold">
+                <h1>Welcome, {fullName}</h1>
             </div>
-            <div>
+            <DashboardScentCollection products={products} />
+            {/* <div>
                 <form action={addProduct}>
                     <input type="text" placeholder="scent name" name="name" />
                     <input type="number" placeholder="scent price" name="price" />
                     <button>Add</button>
                 </form>
-            </div>
-            <div className="h-50 w-75 bg-[#0f0f0f]">
+            </div> */}
+            {/* <div className="h-50 w-75 bg-[#0f0f0f]">
                 <h2>Products</h2>
                 <button 
                 onClick={() => {
@@ -86,7 +88,7 @@ export default function DashboardContent({ products }: { products: Product[] }) 
                         </li>
                     ))}
                 </ul>
-            </div>
+            </div> */}
         </div>
     )
 }
