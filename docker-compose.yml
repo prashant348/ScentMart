@@ -1,7 +1,11 @@
-version: '3.9'
+
 
 services:
   web:
+    # given build context
+    build: 
+      context: .
+      dockerfile: Dockerfile
     image: scent-mart:v2
     container_name: scentmart-web
     # ports:    ISKO HATA DIYA 
